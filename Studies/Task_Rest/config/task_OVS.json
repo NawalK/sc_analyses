@@ -1,0 +1,17 @@
+{
+    "tag_results": "task_rest_OVS",
+    "output_dir": "../results/",
+    
+    "template_path": "/media/miplab-nas2/Data3/SpinalCord/1_CompSeq_Wrist/PAM50_light_new/template/PAM50_t2.nii.gz",
+        
+    "n_jobs": 15,
+    
+    "TR": 2.5,
+
+    "icap_root": "/media/miplab-nas2/Data3/SpinalCord/1_CompSeq_Wrist/iCAPs_results/",
+    "icap_folder": "Task_PAM50_light_new_STD_15sub_Alpha_5_950DOT05/",
+    "cons_folder": "3to20_SubsampleType_items_Fraction_0DOT8_nFolds_20_Dist_cosine",
+    "k_range": [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
+
+    "temp_char_name": "tempChar"
+} 

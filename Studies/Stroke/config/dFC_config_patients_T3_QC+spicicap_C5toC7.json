@@ -1,0 +1,61 @@
+{
+    "overwrite_clinical": false,    
+    "lesion_dir": "/media/miplab-nas2/Data/SpinalCord/5_Stroke/SUVA/LesionAnalysis/",
+    "acute_only": true,
+    "clinical_file": "/media/miplab-nas2/Data/SpinalCord/5_Stroke/log_stroke_spinal_fmri.xlsx",
+    
+    "tag_results": "patients_T3_QC+spicicap",
+    "output_dir": "../results/",
+    
+
+    "template_path": "/media/miplab-nas2/Data/SpinalCord/3_RestingState/LongRecordings/Cervical/PAM50_t2_common/template/PAM50_t2.nii.gz",
+    "levels_path": "/media/miplab-nas2/Data/SpinalCord/3_RestingState/LongRecordings/Cervical/PAM50_t2_common/spinal_levels/",
+
+    "n_jobs": 15,
+    
+    "TR": 2.5,
+
+    "icap_root": "/media/miplab-nas2/Data/SpinalCord/iCAPs_results/",
+    "icap_folder": "PAM50_cropped_r_noWM_240vol_onlyC5toC7_spici_SUVA_T3_onlygoodQC_Alpha_5_950DOT05/",
+    "cons_folder": "3to10_SubsampleType_items_Fraction_0DOT8_nFolds_10_Dist_cosine",
+    "k_range": [4,5,6,7,8,9,10],
+
+    "temp_char_name": "tempChar",
+
+    "list_subjects":{
+                "RS_AT":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_EP":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_FB":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_GB":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_GP":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_LJ":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_MD":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_MP":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_NG":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_NK":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_RL":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_SA":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_SL":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_SW":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_VG":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_VS":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_YF":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_AO":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_AS":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "SUVA-TIMES-002":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-003":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-005":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-006":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-007":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-008":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-010":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-014":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-016":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-021":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-022":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-023":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-025":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-026":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-028":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-031":{"sess":["T3"],"side":"L","subtype":"P"}}
+} 

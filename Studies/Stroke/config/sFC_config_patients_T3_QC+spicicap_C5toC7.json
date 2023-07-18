@@ -1,0 +1,86 @@
+{
+
+    "overwrite_clinical": false,    
+    "overwrite_bp": false,
+    "overwrite_tc": false,
+    "overwrite_corr": true,
+    "overwrite_smooth": false,
+    "overwrite_alff_maps": false,
+    "overwrite_alff_rois": false,
+
+    "tag_results": "patients_T3_QC+spicicap_C5toC7",
+    "output_dir": "../results/",
+    
+    "root": {
+        "P": "/media/miplab-nas2/Data/SpinalCord/5_Stroke/SUVA/",
+        "H": "/media/miplab-nas2/Data/SpinalCord/3_RestingState/LongRecordings/Cervical/"},
+    "func_dir": {
+        "P": "/Functional/",
+        "H": "/Functional_SCT/"},
+    "func_name": {
+        "P": "fmri_moco_denoised",
+        "H": "residuals240vol_noWM"},
+    "sub_prefix": {
+        "P": true,
+        "H": false},
+    
+
+    "template_path": "/media/miplab-nas2/Data/SpinalCord/3_RestingState/LongRecordings/Cervical/PAM50_t2_common_light/",
+    "template_cord": "/media/miplab-nas2/Data/SpinalCord/3_RestingState/LongRecordings/Cervical/PAM50_t2_common_light/template/mask_common.nii",
+    "roi_names":["C5toC7_VR","C5toC7_VL","C5toC7_DR","C5toC7_DL"],
+    
+    "norm_dir": "Normalization_newtemplate",
+    
+    "seg_dir": "Segmentation/",
+    "seg_name": {
+        "P": "fmri_mask_sc",
+        "H": "mask_sc"},
+        
+    "lesion_dir": "/media/miplab-nas2/Data/SpinalCord/5_Stroke/SUVA/LesionAnalysis/",
+    "acute_only": true,
+    "clinical_file": "/media/miplab-nas2/Data/SpinalCord/5_Stroke/log_stroke_spinal_fmri.xlsx",
+
+    "bp_range": [0.01,0.13],
+    
+    "n_jobs": 15,
+    
+    "TR": 2.5,
+    
+     "list_subjects":{
+                "RS_AT":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_EP":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_FB":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_GB":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_GP":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_LJ":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_MD":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_MP":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_NG":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_NK":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_RL":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_SA":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_SL":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_SW":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_VG":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_VS":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_YF":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_AO":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "RS_AS":{"sess":["RS_Moco_SCT"],"subtype":"H"},
+                "SUVA-TIMES-002":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-003":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-005":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-006":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-007":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-008":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-010":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-014":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-016":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-021":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-022":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-023":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-025":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-026":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-028":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-031":{"sess":["T3"],"side":"L","subtype":"P"}
+                }
+} 

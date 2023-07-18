@@ -1,0 +1,73 @@
+{
+
+    "overwrite_clinical": true,    
+    "overwrite_bp": false,
+    "overwrite_tc": false,
+    "overwrite_corr": true,
+    "overwrite_smooth": false,
+    "overwrite_alff_maps": false,
+    "overwrite_alff_rois": false,
+
+
+    "tag_results": "age_stroke_C5toC7",
+    "output_dir": "../results/",
+    
+    "root": {
+        "P": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/Stroke/",
+        "H": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/Elderly/"},
+    "func_dir": {
+        "P": "/func/",
+        "H": "/func/"},
+    "func_name": {
+        "P": "fmri_moco_denoised",
+        "H": "fmri_moco_denoised"},
+    "sub_prefix": {
+        "P": true,
+        "H": true},
+
+    "template_path": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/PAM50_Age_Stroke/",
+    "template_cord": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/PAM50_Age_Stroke/masks/mask_midC5toC7.nii.gz",
+    "roi_names":["mask_midC5toC7_gm_VR","mask_midC5toC7_gm_VL","mask_midC5toC7_gm_DR","mask_midC5toC7_gm_DL"],
+    
+    "norm_dir": "Normalization",
+    
+    "seg_dir": "Segmentation/",
+    "seg_name": {
+        "P": "-mask_sc",
+        "H": "_mask_sc"},
+        
+    "lesion_dir": "/media/miplab-nas2/Data/SpinalCord/5_Stroke/SUVA/LesionAnalysis/",
+    "acute_only": false,
+    "clinical_file": "/media/miplab-nas2/Data/SpinalCord/5_Stroke/log_stroke_spinal_fmri.xlsx",
+
+    "bp_range": [0.01,0.13],
+    
+    "n_jobs": 15,
+    
+    "TR": 2.5,
+    "alff_freq_range": [0.01,0.13],
+
+    "list_subjects":{
+                "SUVA-TIMES-002":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-003":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-006":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-007":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-008":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-010":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-014":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-021":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-022":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-023":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-025":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-026":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-028":{"sess":["T3"],"side":"R","subtype":"P"},
+                "SUVA-TIMES-031":{"sess":["T3"],"side":"L","subtype":"P"},
+                "sub-001":{"sess":[""],"subtype":"H"},
+                "sub-002":{"sess":[""],"subtype":"H"},
+                "sub-004":{"sess":[""],"subtype":"H"},
+                "sub-005":{"sess":[""],"subtype":"H"},
+                "sub-007":{"sess":[""],"subtype":"H"},
+                "sub-009":{"sess":[""],"subtype":"H"},
+                "sub-011":{"sess":[""],"subtype":"H"},
+                "sub-012":{"sess":[""],"subtype":"H"}}
+} 

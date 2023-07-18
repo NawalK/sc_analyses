@@ -1,0 +1,18 @@
+{
+    "tag_results": "first_analysis_icaps_spinalcord",
+    "output_dir": "../results/",
+    
+    "template_path": "/media/miplab-nas2/Data3/BMPD/first_analysis/templates/PAM50_bmpd/template/PAM50_t2.nii.gz",
+    "levels_path": "/media/miplab-nas2/Data3/BMPD/first_analysis/templates/PAM50_bmpd/spinal_levels/",
+    
+    "n_jobs": 15,
+    
+    "TR": 1.55,
+
+    "icap_root": "/media/miplab-nas2/Data3/BMPD/first_analysis/icap_analysis/iCAPs_results/",
+    "icap_folder": "PAM50_Alpha_5_950DOT05/",
+    "cons_folder": "3to20_SubsampleType_items_Fraction_0DOT8_nFolds_20_Dist_cosine",
+    "k_range": [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
+
+    "temp_char_name": "tempChar"
+} 

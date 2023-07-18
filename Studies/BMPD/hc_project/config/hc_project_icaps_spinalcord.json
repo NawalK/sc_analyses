@@ -1,0 +1,44 @@
+{
+    "tag_results": "hc_project_icaps_spinalcord",
+    "output_dir": "../results/",
+    
+    "template_path": "/media/miplab-nas2/Data3/BMPD/hc_project/templates/PAM50_hc_project/template/PAM50_t2.nii.gz",
+    "levels_path": "/media/miplab-nas2/Data3/BMPD/hc_project/templates/PAM50_hc_project/spinal_levels/",
+    
+    "n_jobs": 15,
+    
+    "TR": 1.55,
+
+    "icap_root": "/media/miplab-nas2/Data3/BMPD/hc_project/3_func_smoothed/iCAPs_results/",
+    "icap_folder": "PAM50_3x3x6_Alpha_5_950DOT05/",
+    "cons_folder": "5to20_SubsampleType_items_Fraction_0DOT8_nFolds_20_Dist_cosine",
+    "k_range": [5,6,7,8,9,10,11],
+
+    "temp_char_name": "tempChar",
+
+    "list_subjects":{
+        "sub-P001":{"sess":["rest"]},
+        "sub-P003":{"sess":["rest"]},
+        "sub-P004":{"sess":["rest"]},
+        "sub-P005":{"sess":["rest"]},
+        "sub-P006":{"sess":["rest"]},
+        "sub-P007":{"sess":["rest"]},
+        "sub-P008":{"sess":["rest"]},
+        "sub-P009":{"sess":["rest"]},
+        "sub-P011":{"sess":["rest"]},
+        "sub-P013":{"sess":["rest"]},
+        "sub-P028":{"sess":["rest"]},
+        "sub-P030":{"sess":["rest"]},
+        "sub-P033":{"sess":["rest"]},
+        "sub-P043":{"sess":["rest"]},
+        "sub-P047":{"sess":["rest"]},
+        "sub-P050":{"sess":["rest"]},
+        "sub-P057":{"sess":["rest"]},
+        "sub-P097":{"sess":["rest"]}, 
+        "sub-P099":{"sess":["rest"]},
+        "sub-P100":{"sess":["rest"]},
+        "sub-P105":{"sess":["rest"]},
+        "sub-P108":{"sess":["rest"]},
+        "sub-P109":{"sess":["rest"]}}
+
+} 
