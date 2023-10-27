@@ -35,41 +35,43 @@ class StaticFC:
     def __init__(self, config):
         self.config = config
         print(f'Creating instance for config {self.config["tag_results"]}')
-        print(f'overwrite_bp: {self.config["overwrite_bp"]}')
+        print(f'overwrite_denoising: {self.config["overwrite_denoising"]}')
         print(f'overwrite_tc: {self.config["overwrite_tc"]}')
         print(f'overwrite_corr: {self.config["overwrite_corr"]}')
-        print(f'overwrite_smooth: {self.config["overwrite_smooth"]}')
         print(f'overwrite_alff_maps: {self.config["overwrite_alff_maps"]}')
         print(f'overwrite_alff_rois: {self.config["overwrite_alff_rois"]}')
 
     def prepare_data(self):
         ''' Prepare the data
-        1.  Apply a bandpass filter on the denoised images
-            Note: filter choice is based on Barry et al. 2014, eLife
-        2.  Normalize to PAM50 (nn interpolation)
+        1.  Denoise the images using clean_img
+            Nuisance: 
+                motion [2] + CompCor [5]
+            Temporal filer:
+                - nofilter: no filtering (used for ALFF analyses)
+                - bp: bandpass filter based on Barry et al. 2014, eLife (used for FC analyses)
+        2.  Normalize to PAM50 (spline interpolation)
         3.  Flip normalized images if neeeded
         4.  Smoothing
 
         Outputs
         ----------
-        denoised_img_bp.nii.gz
-            Filtered image
-        denoised_img_bp_pam50_nn.nii.gz
-            Filtered image normalized to the PAM50 template
-        denoised_img_bp_pam50_nn_flipped.nii.gz
-            Filtered image normalized to the PAM50 template, flipped (left <-> right)
+        xx_fmri_moco_denoised_[nofilter/bp].nii.gz
+            Denoised image (no filtering / BP filtered)
+        xx_fmri_moco_denoised_[nofilter/bp]_pam50.nii.gz
+            Denoised image (no filtering / BP filtered) normalized to the PAM50 template
+        xx_fmri_moco_denoised_[nofilter/bp]_pam50_flipped.nii.gz
+            Denoised image (no filtering / BP filtered) normalized to the PAM50 template, flipped (left <-> right)
             /!\ This applies only to patients, if they have lesions on the left side
+        xx_fmri_moco_denoised_[nofilter/bp]_pam50(_flipped)_s.nii.gz
+            Denoised image (no filtering / BP filtered) normalized to the PAM50 template, smoothed
         '''
 
         print('PREPARE DATA')
 
-        # Define filter (same type of filter as Barry 2014)
-        b, a = cheby2(4, 30, self.config['bp_range'],
-                      'bandpass', fs=1./self.config['TR'])
-
-        # Linearize list of subjects & sessions to run in parallel
+       # Linearize list of subjects & sessions to run in parallel
         all_sub = []  # This will contain all the paths without extension, so that they suffixes can be added later on
         sub_to_flip = [] # This will contain paths only for patients where flipping is required
+
         for sub in self.config['list_subjects']:
             for sess in self.config['list_subjects'][sub]['sess']:
                 #  For patients, session name is included in paths, files, etc.
@@ -89,36 +91,44 @@ class StaticFC:
                         f'Unknown subtype {self.config["list_subjects"][sub]["subtype"]}. Should be H or P')
                 all_sub.append(sub_data_path+sub_func_file)
 
-        print(f'Filtering data in the range [{self.config["bp_range"][0]}-{self.config["bp_range"][1]}] Hz')
-       
-        print('... Apply filter')
-        print(f'Overwrite old files: {self.config["overwrite_bp"]}')
+        print('... Denoising')
+        print(f'Overwrite old files: {self.config["overwrite_denoising"]}')
+
         start = time.time()
         
         Parallel(n_jobs=self.config['n_jobs'],
                  verbose=100,
-                 backend='loky')(delayed(self._apply_filter)(sub, b, a)
+                 backend='loky')(delayed(self._apply_denoising)(sub)
                                    for sub in all_sub)
         print("... Operation performed in %.3f s" % (time.time() - start))
-
-        print('... Normalize filtered image')
-        print(f'Overwrite old files: {self.config["overwrite_bp"]}')
+        
+        print('... Normalize denoised images')
+        print(f'Overwrite old files: {self.config["overwrite_denoising"]}')
         start = time.time()
         Parallel(n_jobs=self.config['n_jobs'],
                  verbose=100,
-                 backend='loky')(delayed(self._apply_norm)(sub,interp='nn')\
+                 backend='loky')(delayed(self._apply_norm)(sub)\
                  for sub in all_sub)
         print("... Operation performed in %.3f s" % (time.time() - start))
 
-        print('... Flip normalized filtered image')
-        print(f'Overwrite old files: {self.config["overwrite_bp"]}')
+        print('... Flip normalized denoised images')
+        print(f'Overwrite old files: {self.config["overwrite_flipping"]}')
         start = time.time()
         Parallel(n_jobs=self.config['n_jobs'],
                  verbose=100,
                  backend='loky')(delayed(self._flip)(sub)\
                  for sub in sub_to_flip)      
         print("... Operation performed in %.3f s" % (time.time() - start))
-    
+
+        print('... Smooth normalized denoised images')
+        print(f'Overwrite old files: {self.config["overwrite_smoothing"]}')
+        start = time.time()
+        Parallel(n_jobs=self.config['n_jobs'],
+                 verbose=100,
+                 backend='loky')(delayed(self._smooth)(sub)
+                                    for sub in all_sub)      
+        print("... Operation performed in %.3f s" % (time.time() - start))
+
         print('...DONE!')
 
     def extract_tcs(self):
@@ -151,14 +161,14 @@ class StaticFC:
                         sub_data_path = self.config['root']['P'] + sub + '/' + sess + self.config['func_dir']['P']
                         if self.config['list_subjects'][sub]['side'] == 'R':
                             if self.config['sub_prefix']['P'] == True: # File name different if prefix with subject name or not
-                                sub_func_file = sub + '-' + sess + '-' + self.config['func_name']['P'] + '_bp_pam50_nn.nii.gz' # Name of the normalized filtered fMRI
+                                sub_func_file = sub + '-' + sess + '-' + self.config['func_name']['P'] + '_denoised_bp_pam50.nii.gz' # Name of the normalized filtered fMRI
                             else:
-                                sub_func_file = self.config['func_name']['P'] + '_bp_pam50_nn.nii.gz' # Name of the normalized filtered fMRI
+                                sub_func_file = self.config['func_name']['P'] + '_denoised_bp_pam50.nii.gz' # Name of the normalized filtered fMRI
                         elif self.config['list_subjects'][sub]['side'] == 'L':
                             if self.config['sub_prefix']['P'] == True: # File name different if prefix with subject name or not
-                                sub_func_file = sub + '-' + sess + '-' + self.config['func_name']['P'] + '_bp_pam50_nn_flipped.nii.gz' # Name of the normalized filtered fMRI flipped!
+                                sub_func_file = sub + '-' + sess + '-' + self.config['func_name']['P'] + '_denoised_bp_pam50_flipped.nii.gz' # Name of the normalized filtered fMRI flipped!
                             else:
-                                sub_func_file = self.config['func_name']['P'] + '_bp_pam50_nn_flipped.nii.gz' # Name of the normalized filtered fMRI flipped!
+                                sub_func_file = self.config['func_name']['P'] + '_denoised_bp_pam50_flipped.nii.gz' # Name of the normalized filtered fMRI flipped!
 
                         else:
                             raise Exception(
@@ -167,9 +177,9 @@ class StaticFC:
                         sub_data_path = self.config['root']['H'] + sub + self.config['func_dir']['H'] + sess + '/'
                         if self.config['sub_prefix']['H'] == True: # File name different if prefix with subject name or not
                             # Name of the normalized filtered fMRI
-                            sub_func_file = sub + '_' + self.config['func_name']['H'] + '_bp_pam50_nn.nii.gz'
+                            sub_func_file = sub + '_' + self.config['func_name']['H'] + '_denoised_bp_pam50.nii.gz'
                         else: 
-                            sub_func_file = self.config['func_name']['H'] + '_bp_pam50_nn.nii.gz'
+                            sub_func_file = self.config['func_name']['H'] + '_denoised_bp_pam50.nii.gz'
                     else:
                         raise Exception(
                             f'Unknown subtype {self.config["list_subjects"][sub]["subtype"]}. Should be H or P')
@@ -366,19 +376,20 @@ class StaticFC:
         '''Computes amplitude of low frequency fluctuations (ALFF) for each voxel
         (i.e., sum of the amplitudes in the low frequency band, as defined in config file)
         /!\ Flipping has been taken into account for patients!
+        We do it on smoothed and unsmoothed timeseries
 
         Inputs
         ----------
-        denoised_img_bp_pam50_nn.nii.gz
-            Filtered image normalized to the PAM50 template
-        denoised_img_bp_pam50_nn_flipped.nii.gz
-            Filtered image normalized to the PAM50 template, flipped (left <-> right)
+        xx_fmri_moco_denoised_nofilter_pam50(_s).nii.gz
+            4D images normalized to the PAM50 template (smoothed)
+        xx_fmri_moco_denoised_nofilter_pam50_flipped(_s).nii.gz
+            4D images normalized to the PAM50 template (smoothed), flipped (left <-> right)
 
         Outputs
         ----------
-        denoised_img_alff_pam50.nii.gz
+        xx_fmri_moco_denoised_nofilter_alff_pam50.nii.gz
             ALFF image (i.e., std)
-        denoised_img_alff_Z_pam50.nii.gz
+        xx_fmri_moco_denoised_nofilter_alff_Z_pam50.nii.gz
             Z-scored ALFF image 
 
         '''
@@ -388,6 +399,7 @@ class StaticFC:
         # Linearize list of subjects & sessions to run in parallel
         all_sub = []  # This will contain all the paths without extension, so that they suffixes can be added later on -> only for subjects that do not need to be flipped
         all_sub_flipped = [] # This will contain paths only for patients where flipping is required
+        
         for sub in self.config['list_subjects']:
             for sess in self.config['list_subjects'][sub]['sess']:
                 #  For patients, session name is included in paths, files, etc.
@@ -410,24 +422,6 @@ class StaticFC:
                     raise Exception(
                         f'Unknown subtype {self.config["list_subjects"][sub]["subtype"]}. Should be H or P')
         
-        print('... Smooth normalized filtered image that do not need to be flipped')
-        print(f'Overwrite old files: {self.config["overwrite_smooth"]}')
-        start = time.time()
-        Parallel(n_jobs=self.config['n_jobs'],
-                 verbose=100,
-                 backend='loky')(delayed(self._smooth)(sub,False)
-                                    for sub in all_sub)      
-        print("... Operation performed in %.3f s" % (time.time() - start))
-
-        print('... Smooth normalized filtered image that need to be flipped')
-        print(f'Overwrite old files: {self.config["overwrite_smooth"]}')
-        start = time.time()
-        Parallel(n_jobs=self.config['n_jobs'],
-                 verbose=100,
-                 backend='loky')(delayed(self._smooth)(sub,True)
-                                    for sub in all_sub_flipped)      
-        print("... Operation performed in %.3f s" % (time.time() - start))
-
         print('... Running on data that do not need to be flipped')
         start = time.time()
         Parallel(n_jobs=self.config['n_jobs'],
@@ -521,52 +515,59 @@ class StaticFC:
         return alffs
 
     # Utilities
-    def _apply_filter(self, data_root, b, a):
-        '''Apply bandpass (if file doesn't exist or if we want to overwrite it)
+    def _apply_denoising(self, data_root):
+        '''Denoise images (if file doesn't exist or if we want to overwrite it)
 
         Inputs
         ----------
         data_root : str
-            Path to the image to filter (i.e., no suffix, no file extension)
-
+            Path to the image to denoise (i.e., no suffix, no file extension)
+        
         Outputs
         ----------
-        data_root_bp.nii.gz
-            Filtered image
-
+        data_root_denoised_[bp/nofilter].nii.gz
+            Denoised images (band-pass filtered or not)
         '''
-        if not os.path.isfile(data_root + '_bp.nii.gz') or self.config['overwrite_bp']:
-            img = nib.load(data_root + '.nii.gz')
-            data = img.get_fdata()
-            filtered_data = filtfilt(b, a, data)
-            data_bp_img = nib.Nifti1Image(filtered_data, img.affine, img.header)
-            nib.save(data_bp_img, data_root + '_bp.nii.gz')
+        # Load nuisances (moco+compcor)
+        nuisances = np.hstack((np.loadtxt(os.path.dirname(data_root) + '/Nuisance/moco_nohdr.txt'), np.loadtxt(os.path.dirname(data_root) + '/Nuisance/compcor_nohdr.txt')))
+        # Load moco-ed images
+        data = image.load_img(data_root + '.nii.gz') 
 
-    def _apply_norm(self, data_root, interp):
+        # Denoise with band-pass filter
+        if not os.path.isfile(data_root + '_denoised_bp.nii.gz') or self.config['overwrite_denoising']:
+            data_denoised_bp = image.clean_img(data,confounds=nuisances,t_r=2.5,low_pass=self.config['bp_range'][1],high_pass=self.config['bp_range'][0])
+            data_denoised_bp.to_filename(data_root + '_denoised_bp.nii.gz')
+
+        # Denoise without band-pass filter
+        if not os.path.isfile(data_root + '_denoised_nofilter.nii.gz') or self.config['overwrite_denoising']:
+            data_denoised_bp = image.clean_img(data,confounds=nuisances,t_r=2.5)
+            data_denoised_bp.to_filename(data_root + '_denoised_nofilter.nii.gz')
+
+    def _apply_norm(self, data_root):
         '''Apply normalization using existing warping field
-        /!\ NN interpolation to avoid creating spurious correlations!
+        /!\ Spline interpolation to avoid creating spurious correlations!
 
         Inputs
         ----------
         data_root : str
             Path to the image to filter (i.e., no suffix, no file extension)
-        interp : str
-            Type of interpolation (e.g.: 'nn', 'spline')
-
+        
         Outputs
         ----------
-        data_root_bp_pam50_nn.nii.gz
-            Filtered image, normalized to the PAM50 template
+        data_root_[bp/nofilter]_pam50.nii.gz
+            Denoised images (filtered or not), normalized to the PAM50 template
 
         '''
-        if not os.path.isfile(data_root + '_bp_pam50_' + interp + '.nii.gz') or self.config['overwrite_bp']:
-            run_string = '/home/kinany/sct_5.6/bin/sct_apply_transfo -i ' + data_root + '_bp.nii.gz -d ' + \
-                self.config['template_path'] + 'template/PAM50_t2.nii.gz -w ' + data_root.rsplit('/', 1)[0] + '/' + self.config['norm_dir'] + \
-                '/warp_fmri2template.nii.gz -x ' +  interp + ' -o ' + data_root + '_bp_pam50_' + interp + '.nii.gz'
-            os.system(run_string)
+        images_to_normalize = [data_root + '_denoised_bp', data_root + '_denoised_nofilter']
+        for img in images_to_normalize:
+            if not os.path.isfile(img + '_pam50.nii.gz') or self.config['overwrite_denoising']:
+                run_string = '/home/kinany/sct_5.6/bin/sct_apply_transfo -i ' + img + '.nii.gz -d ' + \
+                    self.config['template_path'] + 'template/PAM50_t2.nii.gz -w ' + data_root.rsplit('/', 1)[0] + '/' + self.config['norm_dir'] + \
+                    '/warp_fmri2template.nii.gz -x spline -o ' + img + '_pam50.nii.gz'
+                os.system(run_string)
 
     def _flip(self, data_root):
-        '''Apply normalization using existing warping field
+        '''Flip images (for patients, so that all lesions are on the same side)
 
         Inputs
         ----------
@@ -575,49 +576,41 @@ class StaticFC:
 
         Outputs
         ----------
-        data_root_bp_pam50_nn_flipped.nii.gz
-            Filtered image, normalized to the PAM50 template, flipped
+        data_root_[bp/nofilter]_pam50_flipped.nii.gz
+            Denoised images (filtered or not), normalized to the PAM50 template, flipped
 
         '''
-        if not os.path.isfile(data_root + '_bp_pam50_nn_flipped.nii.gz') or self.config['overwrite_bp']:
-            img_toflip = nib.load(data_root + '_bp_pam50_nn.nii.gz')
-            data_toflip = img_toflip.get_fdata()
-            data_flipped = data_toflip[::-1]
-            img_flipped = nib.Nifti1Image(data_flipped, img_toflip.affine, img_toflip.header)
-            nib.save(img_flipped,data_root + '_bp_pam50_nn_flipped.nii.gz')
+        images_to_flip = [data_root + '_denoised_bp_pam50', data_root + '_denoised_nofilter_pam50']
+        for img in images_to_flip:
+            if not os.path.isfile(img + '_flipped.nii.gz') or self.config['overwrite_flipping']:
+                img_toflip = nib.load(img + '.nii.gz')
+                data_toflip = img_toflip.get_fdata()
+                data_flipped = data_toflip[::-1]
+                img_flipped = nib.Nifti1Image(data_flipped, img_toflip.affine, img_toflip.header)
+                nib.save(img_flipped, img + '_flipped.nii.gz')
 
-    def _smooth(self, data_root, take_flipped):
+    def _smooth(self, data_root):
         '''Smooth images using a 2x2x6 FWHM kernel
         
         Inputs
         ---------
         data_root : str
-            Path to the image to flip (i.e., no suffix, no file extension)
-        take_flipped : boolean
-            False if we take images that are not flipped (i.e., for patients with right lesion or for healthy subjects)
-            True if we take images that are flipped (i.e., for patients with left lesion)
-
+            Path to the image to smooth (i.e., no suffix, no file extension)
+        
         Outputs
         --------
-        data_root_bp_pam50_nn(_flipped).nii.gz
-            Filtered image, normalized to the PAM50 template, smoothed
+        data_root_[bp/nofilter]_pam50(_flipped)_s.nii.gz
+            Denoised images (filtered or not), normalized to the PAM50 template, smoothed
 
         '''
-        if (not os.path.isfile(data_root + '_bp_pam50_nn_smooth.nii.gz') and not os.path.isfile(data_root + '_bp_pam50_nn_flipped_smooth.nii.gz')) or self.config['overwrite_smooth']:
-            if take_flipped == False:
-                data_to_smooth = data_root + '_bp_pam50_nn'
-            elif take_flipped == True:
-                data_to_smooth = data_root + '_bp_pam50_nn_flipped'
-            else:
-                raise Exception(f'Value of take_flipped is {take_flipped} but should be True or False.')       
-
-            # Check that input file exist
-            if os.path.isfile(data_to_smooth + '.nii.gz'):
-                tmp_smooth = image.smooth_img(data_to_smooth + '.nii.gz', [2,2,6])
-                tmp_smooth.to_filename(data_to_smooth + '_smooth.nii.gz')
-            else:
-                raise Exception(f'Input file {data_to_smooth}.nii.gz does not exist.')  
-        
+        images_to_smooth = [data_root + '_denoised_bp_pam50', data_root + '_denoised_nofilter_pam50']
+        for img in images_to_smooth:
+            if (os.path.isfile(img + '_flipped.nii.gz') and (not os.path.isfile(img + '*_s.nii.gz') or self.config['overwrite_smoothing'] or self.config['overwrite_flipping'])):
+                img_smooth = image.smooth_img(img + '_flipped.nii.gz', [2,2,6])
+                img_smooth.to_filename(img + '_flipped_s.nii.gz')
+            elif not os.path.isfile(img + '*_s.nii.gz') or self.config['overwrite_smoothing']:
+                img_smooth = image.smooth_img(img + '.nii.gz', [2,2,6])
+                img_smooth.to_filename(img + '_s.nii.gz')
 
     def _alff(self,data_root,take_flipped):
         '''Compute alff map for one subject
@@ -637,24 +630,25 @@ class StaticFC:
         data_root_alff_Z_pam50.nii.gz
             Z-scored ALFF image
         '''
-        if (not os.path.isfile(data_root + '_alff_pam50.nii.gz')) or (not os.path.isfile(data_root + '_alff_Z_pam50.nii.gz')) or self.config['overwrite_alff_maps']: # If not already done or if we want to overwrite
+
+        if (not os.path.isfile(data_root + '_alff_pam50_s.nii.gz')) or (not os.path.isfile(data_root + '_alff_Z_pam50_s.nii.gz')) or self.config['overwrite_alff_maps']: # If not already done or if we want to overwrite
             # Load data (different depending on whether we take flipped images or not)
             if take_flipped == False:
                 # Check that input file exist
-                if os.path.isfile(data_root + '_bp_pam50_nn_smooth.nii.gz'):
+                if os.path.isfile(data_root + '_denoised_nofilter_pam50_s.nii.gz'):
                     # Load the data
-                    img = nib.load(data_root + '_bp_pam50_nn_smooth.nii.gz')
+                    img = nib.load(data_root + '_denoised_nofilter_pam50_s.nii.gz')
                     data = img.get_fdata()
                 else:
-                    raise Exception(f'Input file {data_root}_bp_pam50_nn_smooth.nii.gz does not exist.')   
+                    raise Exception(f'Input file {data_root}_denoised_nofilter_pam50_s.nii.gz does not exist.')   
             elif take_flipped == True:
                 # Check that input file exist
-                if os.path.isfile(data_root + '_bp_pam50_nn_flipped_smooth.nii.gz'):
+                if os.path.isfile(data_root + '_denoised_nofilter_pam50_flipped_s.nii.gz'):
                     # Load the data
-                    img = nib.load(data_root + '_bp_pam50_nn_flipped_smooth.nii.gz')
+                    img = nib.load(data_root + '_denoised_nofilter_pam50_flipped_s.nii.gz')
                     data = img.get_fdata()
                 else:
-                    raise Exception(f'Input file {data_root} _bp_pam50_nn_flipped_smooth.nii.gz does not exist.')
+                    raise Exception(f'Input file {data_root}_denoised_nofilter_pam50_flipped_s.nii.gz does not exist.')
             else:
                 raise Exception(f'Value of take_flipped is {take_flipped} but should be True or False.')       
 
@@ -673,19 +667,19 @@ class StaticFC:
 
             # Save the ALFF image
             img_alff = nib.Nifti1Image(alff, img.affine, img.header)
-            nib.save(img_alff, data_root + '_alff_pam50.nii.gz')
+            nib.save(img_alff, data_root + '_alff_pam50_s.nii.gz')
 
             # Save Z-scored ALFF image
-            if os.path.isfile(data_root + '_alff_pam50.nii.gz'): # If previous step has worked (i.e., ALFF computed)        
+            if os.path.isfile(data_root + '_alff_pam50_s.nii.gz'): # If previous step has worked (i.e., ALFF computed)        
                 # Then: Z-score
                 # Compute std and mean in mask
-                stats_mean = ImageStats(in_file=data_root + '_alff_pam50.nii.gz', mask_file=self.config['template_cord'],op_string= '-m')
+                stats_mean = ImageStats(in_file=data_root + '_alff_pam50_s.nii.gz', mask_file=self.config['template_cord'],op_string= '-m')
                 mean = stats_mean.run().outputs.out_stat
-                stats_std = ImageStats(in_file=data_root + '_alff_pam50.nii.gz', mask_file=self.config['template_cord'],op_string= '-s')
+                stats_std = ImageStats(in_file=data_root + '_alff_pam50_s.nii.gz', mask_file=self.config['template_cord'],op_string= '-s')
                 std = stats_std.run().outputs.out_stat
                 # Compute z-score ALFF
-                run_string = 'fslmaths ' + data_root + '_alff_pam50.nii.gz -sub ' + str(mean) + ' -div ' + str(std) + ' ' + data_root + '_alff_Z_pam50.nii.gz'                    
+                run_string = 'fslmaths ' + data_root + '_alff_pam50_s.nii.gz -sub ' + str(mean) + ' -div ' + str(std) + ' ' + data_root + '_alff_Z_pam50_s.nii.gz'                    
                 os.system(run_string)
             else:
-                raise Exception(f'ALFF map {data_root}_alff_pam50.nii.gz cannot be found, Z-score cannot be computed.')       
+                raise Exception(f'ALFF map {data_root}_alff_pam50_s.nii.gz cannot be found, Z-score cannot be computed.')       
             

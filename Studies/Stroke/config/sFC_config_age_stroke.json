@@ -1,16 +1,15 @@
 {
-
     "overwrite_clinical": true,    
-    "overwrite_bp": false,
-    "overwrite_tc": false,
+    "overwrite_denoising": false,
+    "overwrite_flipping": false,
+    "overwrite_smoothing": false,
+    "overwrite_tc": true,
     "overwrite_corr": true,
-    "overwrite_smooth": false,
-    "overwrite_alff_maps": false,
-    "overwrite_alff_rois": false,
+    "overwrite_alff_maps": true,
+    "overwrite_alff_rois": true,
 
-
-    "tag_results": "age_stroke_C5toC7",
-    "output_dir": "../results/",
+    "tag_results": "age_stroke_icaps_C5toC7",
+    "output_dir": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/results/",
     
     "root": {
         "P": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/Stroke/",
@@ -19,15 +18,15 @@
         "P": "/func/",
         "H": "/func/"},
     "func_name": {
-        "P": "fmri_moco_denoised",
-        "H": "fmri_moco_denoised"},
+        "P": "fmri_moco",
+        "H": "fmri_moco"},
     "sub_prefix": {
         "P": true,
         "H": true},
 
     "template_path": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/PAM50_Age_Stroke/",
-    "template_cord": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/PAM50_Age_Stroke/masks/mask_midC5toC7.nii.gz",
-    "roi_names":["mask_midC5toC7_gm_VR","mask_midC5toC7_gm_VL","mask_midC5toC7_gm_DR","mask_midC5toC7_gm_DL"],
+    "template_cord": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/PAM50_Age_Stroke/masks/maskC5toC7.nii.gz",
+    "roi_names":["iCAP_C5toC7_VL","iCAP_C5toC7_VR","iCAP_C5toC7_DL","iCAP_C5toC7_DR"],
     
     "norm_dir": "Normalization",
     
@@ -42,7 +41,7 @@
 
     "bp_range": [0.01,0.13],
     
-    "n_jobs": 15,
+    "n_jobs": 5,
     
     "TR": 2.5,
     "alff_freq_range": [0.01,0.13],
@@ -61,7 +60,7 @@
                 "SUVA-TIMES-025":{"sess":["T3"],"side":"R","subtype":"P"},
                 "SUVA-TIMES-026":{"sess":["T3"],"side":"L","subtype":"P"},
                 "SUVA-TIMES-028":{"sess":["T3"],"side":"R","subtype":"P"},
-                "SUVA-TIMES-031":{"sess":["T3"],"side":"L","subtype":"P"},
+                "SUVA-TIMES-031":{"sess":["T3"],"side":"R","subtype":"P"},
                 "sub-001":{"sess":[""],"subtype":"H"},
                 "sub-002":{"sess":[""],"subtype":"H"},
                 "sub-004":{"sess":[""],"subtype":"H"},
