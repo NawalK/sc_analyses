@@ -59,7 +59,7 @@ class ConsensusClustering:
             Set to True to save figure (default = False)'''
 
         plt.figure(figsize = (7,4))
-        sns.pointplot(data = self.avg_consensus, x="k", y="consensus", palette=sns.color_palette('flare', n_colors=len(self.config['k_range'])), ci='sd', err_style='bars');
+        sns.pointplot(data = self.avg_consensus, x="k", y="consensus", palette=sns.color_palette('flare', n_colors=len(self.config['k_range'])), errorbar='sd');
         
         # If option is set, save results as a png
         if save_results == True:
@@ -76,18 +76,15 @@ class ConsensusClustering:
             Set to True to save figure (default = False)'''
 
         # Style palette
-        dash_list = sns._core.unique_dashes(self.cdf['k'].unique().size+1)
-        style = {key:value for key,value in zip(self.cdf['k'].unique(), dash_list[1:])}
         linesize = {key:value for key,value in zip(self.cdf['k'].unique(), np.full((len(self.config['k_range']),),1))}
         for i in to_highlight:
             if i in self.config['k_range']:
-                style[i] = '' # Empty string means solid
                 linesize[i] = 2 # Thicker lines for selected values
             else:
                 print(f'{i} is not in K range ({self.config["k_range"][0]},{self.config["k_range"][-1]})')
         sns.set_style("ticks")
         plt.figure(figsize=(7,6))
-        sns.lineplot(data=self.cdf,x='consensus',y='fraction',hue='k',style='k',size='k',sizes=linesize,dashes=style,palette=sns.color_palette('flare', n_colors=len(self.config['k_range'])));
+        sns.lineplot(data=self.cdf,x='consensus',y='fraction',hue='k',style='k',size='k',sizes=linesize,palette=sns.color_palette('flare', n_colors=len(self.config['k_range'])));
         plt.legend(bbox_to_anchor=(1.01,1.02), loc='upper left',frameon=False);
         plt.xlim([0,100])
         plt.tight_layout()

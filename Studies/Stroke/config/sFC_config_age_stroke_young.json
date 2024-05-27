@@ -1,0 +1,88 @@
+{
+    "overwrite_clinical": true,    
+    "overwrite_denoising": false,
+    "overwrite_flipping": false,
+    "overwrite_smoothing": false,
+    "overwrite_tc": false,
+    "overwrite_corr": false,
+    "overwrite_alff_maps": false,
+    "overwrite_alff_rois": true,
+
+    "tag_results": "age_stroke_feat_C5toC7",
+    "output_dir": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/results/",
+    
+    "root": {
+        "P": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/Stroke/",
+        "E": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/Elderly/",
+        "Y": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/Young/"},
+    "func_dir": {
+        "P": "/func/",
+        "E": "/func/",
+        "Y": "/func/"},
+    "func_name": {
+        "P": "fmri_moco",
+        "E": "fmri_moco",
+        "Y": "fmri_moco"},
+    "sub_prefix": {
+        "P": true,
+        "E": true,
+        "Y": true},
+
+    "template_path": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/PAM50_Age_Stroke/",
+    "template_cord": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/PAM50_Age_Stroke/masks/frost_C5toC7.nii.gz",
+    "roi_names":["frost_C5toC7_gm_VL","frost_C5toC7_gm_VR","frost_C5toC7_gm_DL","frost_C5toC7_gm_DR"],
+   
+    "norm_dir": "Normalization",
+    
+    "seg_dir": "Segmentation/",
+    "seg_name": {
+        "P": "-mask_sc",
+        "E": "_mask_sc",
+        "Y": "_mask_sc"},
+        
+    "lesion_dir": "/media/miplab-nas2/Data/SpinalCord/5_Stroke/SUVA/LesionAnalysis/",
+    "acute_only": true,
+    "clinical_file": "/media/miplab-nas2/Data/SpinalCord/5_Stroke/log_stroke_spinal_fmri.xlsx",
+
+    "bp_range": [0.01,0.13],
+    
+    "n_jobs": 5,
+    
+    "TR": 2.5,
+    "alff_freq_range": [0.01,0.13],
+    
+    "list_subjects":{
+                "SUVA-TIMES-002":{"sess":["T3"],"side":"R","subtype":"P","grouping":"P"},
+                "SUVA-TIMES-003":{"sess":["T3"],"side":"L","subtype":"P","grouping":"P"},
+                "SUVA-TIMES-006":{"sess":["T3"],"side":"L","subtype":"P","grouping":"P"},
+                "SUVA-TIMES-007":{"sess":["T3"],"side":"R","subtype":"P","grouping":"P"},
+                "SUVA-TIMES-008":{"sess":["T3"],"side":"L","subtype":"P","grouping":"P"},
+                "SUVA-TIMES-010":{"sess":["T3"],"side":"R","subtype":"P","grouping":"P"},
+                "SUVA-TIMES-014":{"sess":["T3"],"side":"R","subtype":"P","grouping":"P"},
+                "SUVA-TIMES-021":{"sess":["T3"],"side":"L","subtype":"P","grouping":"P"},
+                "SUVA-TIMES-022":{"sess":["T3"],"side":"R","subtype":"P","grouping":"P"},
+                "SUVA-TIMES-023":{"sess":["T3"],"side":"R","subtype":"P","grouping":"P"},
+                "SUVA-TIMES-025":{"sess":["T3"],"side":"R","subtype":"P","grouping":"P"},
+                "SUVA-TIMES-026":{"sess":["T3"],"side":"L","subtype":"P","grouping":"P"},
+                "SUVA-TIMES-028":{"sess":["T3"],"side":"R","subtype":"P","grouping":"P"},
+                "SUVA-TIMES-031":{"sess":["T3"],"side":"R","subtype":"P","grouping":"P"},
+                "RS_AT":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_EP":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_FB":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_GB":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_GP":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_LJ":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_MD":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_MP":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_NG":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_NK":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_RL":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_SA":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_SL":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_SW":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_VG":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_VS":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_YF":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_AO":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_AS":{"sess":[""],"subtype":"Y","grouping":"H"}}
+} 

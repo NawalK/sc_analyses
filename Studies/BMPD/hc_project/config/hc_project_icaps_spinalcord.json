@@ -1,5 +1,5 @@
 {
-    "tag_results": "hc_project_icaps_spinalcord",
+    "tag_results": "brain_spine_icaps_spinalcord",
     "output_dir": "../results/",
     
     "template_path": "/media/miplab-nas2/Data3/BMPD/hc_project/templates/PAM50_hc_project/template/PAM50_t2.nii.gz",
@@ -9,10 +9,12 @@
     
     "TR": 1.55,
 
-    "icap_root": "/media/miplab-nas2/Data3/BMPD/hc_project/3_func_smoothed/iCAPs_results/",
-    "icap_folder": "PAM50_3x3x6_Alpha_5_950DOT05/",
-    "cons_folder": "5to20_SubsampleType_items_Fraction_0DOT8_nFolds_20_Dist_cosine",
-    "k_range": [5,6,7,8,9,10,11],
+    "icap_root": "/media/miplab-nas2/Data3/BMPD/hc_project/brain_spine/iCAPs_results/",
+    "icap_folder_br": "MNI_2mm_31sub_Alpha_5_95_Fraction_0DOT05/",
+    "cons_folder_br": "5to20_SubsampleType_items_Fraction_0DOT8_nFolds_20_Dist_cosine",
+    "icap_folder": "PAM50_C1toC7_31sub_Alpha_5_95_Fraction_0DOT05/",
+    "cons_folder": "3to10_SubsampleType_items_Fraction_0DOT8_nFolds_20_Dist_cosine",
+    "k_range": [7],
 
     "temp_char_name": "tempChar",
 

@@ -45,6 +45,7 @@ class ClinicalAnalyses:
             pinch = []
             mas = []
             fm = []
+            rasp = []
             age = []
             gender = []
             
@@ -60,18 +61,18 @@ class ClinicalAnalyses:
                     # Get lesion info
                     tmp_load = np.zeros((2, 1))
                     for sideix, side in enumerate(['L', 'R']):
-                        if self.config['acute_only'] == True and os.path.isfile(self.config['lesion_dir'] + 'Lesions/' + sub + '-' + session + '-acute_only-overlap_FSL_CST_' + side + '.nii.gz'):
-                            lesion_overlap = nib.load(self.config['lesion_dir'] + 'Lesions/' + sub + '-' + session + '-acute_only-overlap_FSL_CST_' + side + '.nii.gz')
+                        if self.config['acute_only'] == True and os.path.isfile(self.config['lesion_dir'] + 'Lesions/' + sub + '-' + session + '-acute_only-overlap_FSL_CST_' + side + '_thr0.nii.gz'):
+                            lesion_overlap = nib.load(self.config['lesion_dir'] + 'Lesions/' + sub + '-' + session + '-acute_only-overlap_FSL_CST_' + side + '_thr0.nii.gz')
                         else:
-                            lesion_overlap = nib.load(self.config['lesion_dir'] + 'Lesions/' + sub + '-' + session + '-overlap_FSL_CST_' + side + '.nii.gz')
+                            lesion_overlap = nib.load(self.config['lesion_dir'] + 'Lesions/' + sub + '-' + session + '-overlap_FSL_CST_' + side + '_thr0.nii.gz')
                         lesion_overlap_np = lesion_overlap.get_fdata()
                         if side == 'L':
                             weighted_load_L.append(_compute_weighted_load(lesion_overlap_np, sideix, self.config['lesion_dir']))
                         elif side == 'R':
                             weighted_load_R.append(_compute_weighted_load(lesion_overlap_np, sideix, self.config['lesion_dir']))
-                    weighted_load = weighted_load_L + weighted_load_R
+                    weighted_load = [x + y for x,y in zip(weighted_load_L,weighted_load_R)]
                     # Add also total volume of lesion
-                    if self.config['acute_only'] == True and os.path.isfile(self.config['lesion_dir'] + 'Lesions/' + sub + '-' + session + '-acute_only-overlap_FSL_CST_' + side + '.nii.gz'):
+                    if self.config['acute_only'] == True and os.path.isfile(self.config['lesion_dir'] + 'Lesions/' + sub + '-' + session + '-acute_only-overlap_FSL_CST_' + side + '_thr0.nii.gz'):
                         lesion = nib.load(self.config['lesion_dir'] + 'Lesions/' + sub + '-' + session + '-lesion_acute_only.nii')
                     else:
                         lesion = nib.load(self.config['lesion_dir'] + 'Lesions/' + sub + '-' + session + '-lesion.nii')
@@ -89,16 +90,19 @@ class ClinicalAnalyses:
                     # 2. ARAT pinch
                     # Column 3/5/7
                     pinch.append(raw_clinical_data.loc[raw_clinical_data.iloc[:,1]==sub, raw_clinical_data.columns[3+2*sessions_ix.get(session)]].values[0])
-                    # 3. MAS
+                    # 4. MAS
                     # Column 9/11/13
                     mas.append(raw_clinical_data.loc[raw_clinical_data.iloc[:,1]==sub, raw_clinical_data.columns[9+2*sessions_ix.get(session)]].values[0])
-                    # 4. Age
+                    # 4. MAS
+                    # Columns 27-29
+                    rasp.append(raw_clinical_data.loc[raw_clinical_data.iloc[:,1]==sub, raw_clinical_data.columns[27+sessions_ix.get(session)]].values[0])
+                    # 6. Age
                     age.append(raw_clinical_data.loc[raw_clinical_data.iloc[:,1]==sub, raw_clinical_data.columns[18]].values[0])
-                    # 5. Gender
+                    # 7. Gender
                     gender.append(raw_clinical_data.loc[raw_clinical_data.iloc[:,1]==sub, raw_clinical_data.columns[19]].values[0])
             
-            colnames = ["sub", "sess", "CST_L", "CST_R", "CST","vol", "fm", "pinch", "mas", "age", "gender"]
-            clinical_infos = pd.DataFrame(list(zip(subs, sessions, weighted_load_L, weighted_load_R, weighted_load, lesion_vol, fm, pinch, mas, age, gender)), columns=colnames)
+            colnames = ["sub", "sess", "CST_L", "CST_R", "CST","vol", "fm", "pinch", "mas", "rasp", "age", "gender"]
+            clinical_infos = pd.DataFrame(list(zip(subs, sessions, weighted_load_L, weighted_load_R, weighted_load, lesion_vol, fm, pinch, mas, rasp, age, gender)), columns=colnames)
             clinical_infos.to_pickle(self.config['output_dir'] + 'clinical_infos_' + self.config['tag_results'] + '.pkl')  # Save dataframe
 
         else:
@@ -145,12 +149,14 @@ class ClinicalAnalyses:
             for test in totest_names:
                 tested.append(test)
                 clinics.append(clinical)
+                # Create a mask for NaN values
+                mask_nonan = ~np.isnan(clinical_totest[test]) & ~np.isnan(clinical_totest[clinical])
                 if rm_confounds==True:
                     pcorr = pg.partial_corr(data=clinical_totest, x=test, y=clinical, covar=['age','gender'])
                     rhos.append(pcorr.values[0][1])
                     ps.append(pcorr.values[0][3])
                 else:
-                    corr = pearsonr(clinical_totest[test], clinical_totest[clinical])
+                    corr = pearsonr(clinical_totest[test][mask_nonan], clinical_totest[clinical][mask_nonan])
                     rhos.append(corr[0])
                     ps.append(corr[1])
 
@@ -191,7 +197,7 @@ class ClinicalAnalyses:
 # Function for CST load computation
 def _compute_weighted_load(lesion, side, atlas_folder):
     ''' Computes CST load (weighted, using binarized atlas), see https://onlinelibrary.wiley.com/doi/10.1002/ana.24510
-        Note: here, FSL atlas binarized at 70% is used
+        Note: here, FSL atlas binarized at 0% is used
 
         Parameter
         ----------
@@ -204,9 +210,9 @@ def _compute_weighted_load(lesion, side, atlas_folder):
     '''
     # ATLAS
     if side == 0:
-        template = nib.load(atlas_folder + 'Atlas/FSL_CST_L_resized_bin_thr70.nii.gz')
+        template = nib.load(atlas_folder + 'Atlas/FSL_CST_L_resized_bin_thr0.nii.gz')
     elif side == 1:
-        template = nib.load(atlas_folder + 'Atlas/FSL_CST_R_resized_bin_thr70.nii.gz')
+        template = nib.load(atlas_folder + 'Atlas/FSL_CST_R_resized_bin_thr0.nii.gz')
     template_np = template.get_fdata()
     sum_slice = template_np.sum(axis=(0, 1))  # Sum of voxels per slice (atlas)
     with np.errstate(all='ignore'):

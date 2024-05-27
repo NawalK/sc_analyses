@@ -5,7 +5,7 @@
     "overwrite_smoothing": false,
     "overwrite_tc": true,
     "overwrite_corr": true,
-    "overwrite_alff_maps": true,
+    "overwrite_alff_maps": false,
     "overwrite_alff_rois": true,
 
     "tag_results": "age_stroke_icaps_C5toC7",
@@ -25,7 +25,7 @@
         "H": true},
 
     "template_path": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/PAM50_Age_Stroke/",
-    "template_cord": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/PAM50_Age_Stroke/masks/maskC5toC7.nii.gz",
+    "template_cord": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/PAM50_Age_Stroke/masks/mask_C5toC7.nii",
     "roi_names":["iCAP_C5toC7_VL","iCAP_C5toC7_VR","iCAP_C5toC7_DL","iCAP_C5toC7_DR"],
     
     "norm_dir": "Normalization",

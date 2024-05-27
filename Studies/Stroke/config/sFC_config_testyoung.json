@@ -1,0 +1,86 @@
+{
+    "overwrite_clinical": true,    
+    "overwrite_flipping": false,
+    "overwrite_smoothing": false,
+    "overwrite_tc": false,
+    "overwrite_corr": false,
+    "overwrite_alff_maps": false,
+    "overwrite_alff_rois": true,
+
+    "tag_results": "test_young_hp_feat",
+    "tag_results_C5C7": "age_stroke_young_C5toC7",
+    "tag_results_LR_gm": "age_stroke_young_LR_gm",
+    "tag_results_C5C7_gm": "age_stroke_young_C5toC7_gm",
+    "tag_results_LR": "age_stroke_young_LR",
+    "tag_results_atlas": "age_stroke_young_C6toC7_atlas03",
+
+    "output_dir": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/results/",
+    
+    "root": {
+        "P": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/Stroke/",
+        "E": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/Elderly/",
+        "Y": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/Young/"},
+    "func_dir": {
+        "P": "/func/",
+        "E": "/func/",
+        "Y": "/func/"},
+    "func_name": {
+        "P": "fmri_moco",
+        "E": "fmri_moco",
+        "Y": "fmri_moco"},
+    "sub_prefix": {
+        "P": true,
+        "E": true,
+        "Y": true},
+
+    "template_path": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/PAM50_Age_Stroke/",
+    "template_cord": "/media/miplab-nas2/Data3/SpinalCord/4_Age_Stroke/PAM50_Age_Stroke/masks/frost_C5toC7.nii.gz",
+    "roi_names":["frost_C5toC7_gm_VL","frost_C5toC7_gm_VR","frost_C5toC7_gm_DL","frost_C5toC7_gm_DR"],
+    "roi_names_C5C7":["frost_C5toC7_VL","frost_C5toC7_VR","frost_C5toC7_DL","frost_C5toC7_DR"],
+    "roi_names_LR":["frost_C5toC7_L","frost_C5toC7_R"],
+    "roi_names_LR_gm":["frost_C5toC7_gm_L","frost_C5toC7_gm_R"],
+    "roi_names_gm":["frost_C5toC7_gm_VL","frost_C5toC7_gm_VR","frost_C5toC7_gm_DL","frost_C5toC7_gm_DR"],
+    "roi_names_alff":["randomise_noconfounds_tfce_corrp_tstat2_mask"],
+    "roi_names_C6C7_atlas":["frost_C6toC7_atlas_VL_03","frost_C6toC7_atlas_VR_03","frost_C6toC7_atlas_DL_03","frost_C6toC7_atlas_DR_03"],
+
+    "norm_dir": "Normalization",
+    
+    "seg_dir": "Segmentation/",
+    "seg_name": {
+        "P": "-mask_sc",
+        "E": "_mask_sc",
+        "Y": "_mask_sc"},
+        
+    "lesion_dir": "/media/miplab-nas2/Data/SpinalCord/5_Stroke/SUVA/LesionAnalysis/",
+    "acute_only": true,
+    "clinical_file": "/media/miplab-nas2/Data/SpinalCord/5_Stroke/log_stroke_spinal_fmri.xlsx",
+
+    "bp_range": [0.01,0.13],
+    
+    "n_jobs": 5,
+    
+    "TR": 2.5,
+    "alff_freq_range": [0.01,0.13],
+    
+    "list_subjects":{
+                "RS_AT":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_EP":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_FB":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_GB":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_GP":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_LJ":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_MD":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_MP":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_NG":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_NK":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_RL":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_SA":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_SL":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_SW":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_VG":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_VS":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_YF":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_AO":{"sess":[""],"subtype":"Y","grouping":"H"},
+                "RS_AS":{"sess":[""],"subtype":"Y","grouping":"H"}
+            }
+} 

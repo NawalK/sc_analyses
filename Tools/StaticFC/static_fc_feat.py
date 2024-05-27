@@ -35,7 +35,6 @@ class StaticFC:
     def __init__(self, config):
         self.config = config
         print(f'Creating instance for config {self.config["tag_results"]}')
-        print(f'overwrite_denoising: {self.config["overwrite_denoising"]}')
         print(f'overwrite_flipping: {self.config["overwrite_flipping"]}')
         print(f'overwrite_smoothing: {self.config["overwrite_smoothing"]}')
         print(f'overwrite_tc: {self.config["overwrite_tc"]}')
@@ -44,33 +43,22 @@ class StaticFC:
         print(f'overwrite_alff_rois: {self.config["overwrite_alff_rois"]}')
 
     def prepare_data(self):
-        ''' Prepare the data
-        1.  Denoise the images using clean_img
-            Nuisance: 
-                motion [2] + CompCor [5]
-            Temporal filer:
-                - nofilter: no filtering (used for ALFF analyses)
-                - bp: bandpass filter based on Barry et al. 2014, eLife (used for FC analyses)
-        2.  Normalize to PAM50 (spline interpolation)
-        3.  Flip normalized images if neeeded
-        4.  Smoothing
+        ''' Prepare the data if denoising + normalisation done externally using FSL's FEAT
+        1.  Flip normalized images if neeeded
+        2.  Smoothing
 
         Outputs
         ----------
-        xx_fmri_moco_denoised_[nofilter/bp].nii.gz
-            Denoised image (no filtering / BP filtered)
-        xx_fmri_moco_denoised_[nofilter/bp]_pam50.nii.gz
-            Denoised image (no filtering / BP filtered) normalized to the PAM50 template
-        xx_fmri_moco_denoised_[nofilter/bp]_pam50_flipped.nii.gz
-            Denoised image (no filtering / BP filtered) normalized to the PAM50 template, flipped (left <-> right)
+        xx_fmri_moco_denoised_feat_pam50_flipped.nii.gz
+            Denoised image (with FEAT) normalized to the PAM50 template, flipped (left <-> right)
             /!\ This applies only to patients, if they have lesions on the left side
-        xx_fmri_moco_denoised_[nofilter/bp]_pam50(_flipped)_s.nii.gz
-            Denoised image (no filtering / BP filtered) normalized to the PAM50 template, smoothed
+        xx_fmri_moco_denoised_feat_pam50(_flipped)_s.nii.gz
+            Denoised image (with FEAT) normalized to the PAM50 template, smoothed
         '''
 
         print('PREPARE DATA')
 
-       # Linearize list of subjects & sessions to run in parallel
+        # Linearize list of subjects & sessions to run in parallel
         all_sub = []  # This will contain all the paths without extension, so that they suffixes can be added later on
         sub_to_flip = [] # This will contain paths only for patients where flipping is required
 
@@ -92,26 +80,6 @@ class StaticFC:
                     raise Exception(
                         f'Unknown subtype {self.config["list_subjects"][sub]["subtype"]}. Should be E (elderly), Y (young), or P (patients)')
                 all_sub.append(sub_data_path+sub_func_file)
-
-        print('... Denoising')
-        print(f'Overwrite old files: {self.config["overwrite_denoising"]}')
-
-        start = time.time()
-        
-        Parallel(n_jobs=self.config['n_jobs'],
-                 verbose=100,
-                 backend='loky')(delayed(self._apply_denoising)(sub)
-                                   for sub in all_sub)
-        print("... Operation performed in %.3f s" % (time.time() - start))
-        
-        print('... Normalize denoised images')
-        print(f'Overwrite old files: {self.config["overwrite_denoising"]}')
-        start = time.time()
-        Parallel(n_jobs=self.config['n_jobs'],
-                 verbose=100,
-                 backend='loky')(delayed(self._apply_norm)(sub)\
-                 for sub in all_sub)
-        print("... Operation performed in %.3f s" % (time.time() - start))
 
         print('... Flip normalized denoised images')
         print(f'Overwrite old files: {self.config["overwrite_flipping"]}')
@@ -153,58 +121,60 @@ class StaticFC:
             subs = []
             sessions = []
             rois = []
+            groups = []
 
             for sub in self.config['list_subjects']:
                 print(f'Extracting timecourses for subject {sub}')
                 for sess in self.config['list_subjects'][sub]['sess']:
-                    print(f'...Session {sess}')
-                    #  For patients, session name is included in paths, files, etc.
-                    if self.config['list_subjects'][sub]['subtype'] == 'P':
-                        sub_data_path = self.config['root']['P'] + sub + '/' + sess + self.config['func_dir']['P']
-                        if self.config['list_subjects'][sub]['side'] == 'R':
-                            if self.config['sub_prefix']['P'] == True: # File name different if prefix with subject name or not
-                                sub_func_file = sub + '-' + sess + '-' + self.config['func_name']['P'] + '_denoised_bp_pam50.nii.gz' # Name of the normalized filtered fMRI
+                    for group in self.config['list_subjects'][sub]['grouping']:
+                        print(f'...Session {sess}')
+                        #  For patients, session name is included in paths, files, etc.
+                        if self.config['list_subjects'][sub]['subtype'] == 'P':
+                            sub_data_path = self.config['root']['P'] + sub + '/' + sess + self.config['func_dir']['P']
+                            if self.config['list_subjects'][sub]['side'] == 'R':
+                                if self.config['sub_prefix']['P'] == True: # File name different if prefix with subject name or not
+                                    sub_func_file = sub + '-' + sess + '-' + self.config['func_name']['P'] + '_denoised_feat_pam50.nii.gz' # Name of the normalized filtered fMRI
+                                else:
+                                    sub_func_file = self.config['func_name']['P'] + '_denoised_feat_pam50.nii.gz' # Name of the normalized filtered fMRI
+                            elif self.config['list_subjects'][sub]['side'] == 'L':
+                                if self.config['sub_prefix']['P'] == True: # File name different if prefix with subject name or not
+                                    sub_func_file = sub + '-' + sess + '-' + self.config['func_name']['P'] + '_denoised_feat_pam50_flipped.nii.gz' # Name of the normalized filtered fMRI flipped!
+                                else:
+                                    sub_func_file = self.config['func_name']['P'] + '_denoised_feat_pam50_flipped.nii.gz' # Name of the normalized filtered fMRI flipped!
                             else:
-                                sub_func_file = self.config['func_name']['P'] + '_denoised_bp_pam50.nii.gz' # Name of the normalized filtered fMRI
-                        elif self.config['list_subjects'][sub]['side'] == 'L':
-                            if self.config['sub_prefix']['P'] == True: # File name different if prefix with subject name or not
-                                sub_func_file = sub + '-' + sess + '-' + self.config['func_name']['P'] + '_denoised_bp_pam50_flipped.nii.gz' # Name of the normalized filtered fMRI flipped!
-                            else:
-                                sub_func_file = self.config['func_name']['P'] + '_denoised_bp_pam50_flipped.nii.gz' # Name of the normalized filtered fMRI flipped!
-
+                                raise Exception(
+                                    f'Unknown side {self.config["list_subjects"][sub]["side"]}. Should be L or R') 
+                        elif self.config['list_subjects'][sub]['subtype'] in ['E','Y']:
+                            sub_data_path = self.config['root'][self.config['list_subjects'][sub]['subtype']] + sub + self.config['func_dir'][self.config['list_subjects'][sub]['subtype']] + sess + '/'
+                            if self.config['sub_prefix'][self.config['list_subjects'][sub]['subtype']] == True: # File name different if prefix with subject name or not
+                                # Name of the normalized filtered fMRI
+                                sub_func_file = sub + '_' + self.config['func_name'][self.config['list_subjects'][sub]['subtype']] + '_denoised_feat_pam50.nii.gz'
+                            else: 
+                                sub_func_file = self.config['func_name'][self.config['list_subjects'][sub]['subtype']] + '_denoised_feat_pam50.nii.gz'
                         else:
                             raise Exception(
-                                f'Unknown side {self.config["list_subjects"][sub]["side"]}. Should be L or R') 
-                    elif self.config['list_subjects'][sub]['subtype'] in ['E','Y']:
-                        sub_data_path = self.config['root'][self.config['list_subjects'][sub]['subtype']] + sub + self.config['func_dir'][self.config['list_subjects'][sub]['subtype']] + sess + '/'
-                        if self.config['sub_prefix'][self.config['list_subjects'][sub]['subtype']] == True: # File name different if prefix with subject name or not
-                            # Name of the normalized filtered fMRI
-                            sub_func_file = sub + '_' + self.config['func_name'][self.config['list_subjects'][sub]['subtype']] + '_denoised_bp_pam50.nii.gz'
-                        else: 
-                            sub_func_file = self.config['func_name'][self.config['list_subjects'][sub]['subtype']] + '_denoised_bp_pam50.nii.gz'
-                    else:
-                        raise Exception(
-                            f'Unknown subtype {self.config["list_subjects"][sub]["subtype"]}. Should be E (elderly), Y (young), or P (patients)')
-                    # Then, we take the average signal in each region of interest
-                    for roi in self.config['roi_names']:
-                        print(f'......In {roi}')
-                        tc = apply_mask(
-                            sub_data_path+sub_func_file, self.config['template_path'] + '/masks/' + roi + '.nii.gz')
-                        # Replace zeros with NaNs
-                        tc_nan = np.where(tc == 0, np.nan, tc)
-                        # Calculate the mean along axis 1, excluding NaN values
-                        mean_tc = np.nanmean(tc_nan, axis=1)
+                                f'Unknown subtype {self.config["list_subjects"][sub]["subtype"]}. Should be E (elderly), Y (young), or P (patients)')
+                        # Then, we take the average signal in each region of interest
+                        for roi in self.config['roi_names']:
+                            print(f'......In {roi}')
+                            tc = apply_mask(
+                                sub_data_path+sub_func_file, self.config['template_path'] + '/masks/' + roi + '.nii.gz')
+                            # Replace zeros with NaNs
+                            tc_nan = np.where(tc == 0, np.nan, tc)
+                            # Calculate the mean along axis 1, excluding NaN values
+                            mean_tc = np.nanmean(tc_nan, axis=1)
 
-                        # Then, prepare data to include in dataframe
-                        for tval in range(0, len(mean_tc)):
-                            t = np.append(t, tval)
-                            subs.append(sub)
-                            sessions.append(sess)
-                            rois.append(roi)
-                        tcs = np.append(tcs, mean_tc)
+                            # Then, prepare data to include in dataframe
+                            for tval in range(0, len(mean_tc)):
+                                t = np.append(t, tval)
+                                subs.append(sub)
+                                sessions.append(sess)
+                                rois.append(roi)
+                                groups.append(group)
+                            tcs = np.append(tcs, mean_tc)
 
-            colnames = ["t", "tc", "sub", "sess", "roi"]
-            tcs = pd.DataFrame(list(zip(t, tcs, subs, sessions, rois)), columns=colnames)
+            colnames = ["t", "tc", "sub", "sess", "roi","group"]
+            tcs = pd.DataFrame(list(zip(t, tcs, subs, sessions, rois, groups)), columns=colnames)
             tcs.to_pickle(self.config['output_dir'] + 'tcs_' + self.config['tag_results'] + '.pkl')  # Save dataframe
         else:
             print('Timecourses already extracted, loading from .pkl fike...')
@@ -303,14 +273,14 @@ class StaticFC:
             # Generate a mask for the lower triangle
             mask_lt = np.triu(np.ones_like(rois, dtype=bool))
             mask_ut = np.tril(np.ones_like(rois, dtype=bool))
-            for groupix,group in enumerate(corrs['group'].unique().tolist()):
-                sns.heatmap(np.reshape(corrs[corrs['group']==group].groupby(['roi1','roi2'],sort=False)['rho_Z'].mean().values,(len(rois),len(rois))),
-                            ax=axes.flat[groupix], linewidths=.5,vmin=-0.2,vmax=0.2,square=True,cmap=sns.diverging_palette(220, 20, as_cmap=True),mask=mask_lt,cbar_kws={'label': 'Fisher Z','shrink':0.9})
-                sns.heatmap(np.reshape(corrs_stats[corrs_stats['group']==group]['p_fdr'].values,(len(rois),len(rois))),
+            for gpix,gp in enumerate(corrs['group'].unique().tolist()):
+                sns.heatmap(np.reshape(corrs[corrs['group']==gp].groupby(['roi1','roi2'],sort=False)['rho_Z'].mean().values,(len(rois),len(rois))),
+                            ax=axes.flat[gpix], linewidths=.5,vmin=-0.2,vmax=0.2,square=True,cmap=sns.diverging_palette(220, 20, as_cmap=True),mask=mask_lt,cbar_kws={'label': 'Fisher Z','shrink':0.9})
+                sns.heatmap(np.reshape(corrs_stats[corrs_stats['group']==gp]['p_fdr'].values,(len(rois),len(rois))),
                             xticklabels=rois,
                             yticklabels=rois,
-                            ax=axes.flat[groupix],linewidths=.5,vmin=0,vmax=0.05,square=True,cmap="Greys_r",mask=mask_ut,cbar_kws={'label': 'Corrected p-value','shrink':0.9})        
-                axes.flat[groupix].set_title(group)
+                            ax=axes.flat[gpix],linewidths=.5,vmin=0,vmax=0.05,square=True,cmap="Greys_r",mask=mask_ut,cbar_kws={'label': 'Corrected p-value','shrink':0.9})        
+                axes.flat[gpix].set_title(gp)
             fig.savefig(self.config['output_dir'] + 'plots/corrs_' + self.config['tag_results'] + '.pdf')
 
         return corrs, corrs_stats
@@ -527,62 +497,6 @@ class StaticFC:
         return alffs
 
     # Utilities
-    def _apply_denoising(self, data_root):
-        '''Denoise images (if file doesn't exist or if we want to overwrite it)
-
-        Inputs
-        ----------
-        data_root : str
-            Path to the image to denoise (i.e., no suffix, no file extension)
-        
-        Outputs
-        ----------
-        data_root_denoised_[bp/hp/nofilter].nii.gz
-            Denoised images (band-pass filtered or not)
-        '''
-        # Load nuisances (moco+compcor)
-        nuisances = np.hstack((np.loadtxt(os.path.dirname(data_root) + '/Nuisance/moco_nohdr.txt'), np.loadtxt(os.path.dirname(data_root) + '/Nuisance/compcor_nohdr.txt')))
-        # Load moco-ed images
-        data = image.load_img(data_root + '.nii.gz') 
-
-        # Denoise with band-pass filter
-        if not os.path.isfile(data_root + '_denoised_bp.nii.gz') or self.config['overwrite_denoising']:
-            data_denoised_bp = image.clean_img(data,confounds=nuisances,t_r=2.5,low_pass=self.config['bp_range'][1],high_pass=self.config['bp_range'][0])
-            data_denoised_bp.to_filename(data_root + '_denoised_bp.nii.gz')
-
-        # Denoise with high-pass filter
-        if not os.path.isfile(data_root + '_denoised_hp.nii.gz') or self.config['overwrite_denoising']:
-            data_denoised_bp = image.clean_img(data,confounds=nuisances,high_pass=self.config['bp_range'][0],t_r=2.5)
-            data_denoised_bp.to_filename(data_root + '_denoised_hp.nii.gz')
-
-        # Denoise without band-pass filter
-        if not os.path.isfile(data_root + '_denoised_nofilter.nii.gz') or self.config['overwrite_denoising']:
-            data_denoised_bp = image.clean_img(data,confounds=nuisances,t_r=2.5)
-            data_denoised_bp.to_filename(data_root + '_denoised_nofilter.nii.gz')
-
-    def _apply_norm(self, data_root):
-        '''Apply normalization using existing warping field
-        /!\ Spline interpolation to avoid creating spurious correlations!
-
-        Inputs
-        ----------
-        data_root : str
-            Path to the image to filter (i.e., no suffix, no file extension)
-        
-        Outputs
-        ----------
-        data_root_[bp/hp/nofilter]_pam50.nii.gz
-            Denoised images (filtered or not), normalized to the PAM50 template
-
-        '''
-        images_to_normalize = [data_root + '_denoised_bp', data_root + '_denoised_hp', data_root + '_denoised_nofilter']
-        for img in images_to_normalize:
-            if not os.path.isfile(img + '_pam50.nii.gz') or self.config['overwrite_denoising']:
-                run_string = '/home/kinany/sct_5.6/bin/sct_apply_transfo -i ' + img + '.nii.gz -d ' + \
-                    self.config['template_path'] + 'template/PAM50_t2.nii.gz -w ' + data_root.rsplit('/', 1)[0] + '/' + self.config['norm_dir'] + \
-                    '/warp_fmri2template.nii.gz -x spline -o ' + img + '_pam50.nii.gz'
-                os.system(run_string)
-
     def _flip(self, data_root):
         '''Flip images (for patients, so that all lesions are on the same side)
 
@@ -593,11 +507,11 @@ class StaticFC:
 
         Outputs
         ----------
-        data_root_[bp/hp/nofilter]_pam50_flipped.nii.gz
-            Denoised images (filtered or not), normalized to the PAM50 template, flipped
+        data_root_feat_pam50_flipped.nii.gz
+            Denoised images (with FEAT), normalized to the PAM50 template, flipped
 
         '''
-        images_to_flip = [data_root + '_denoised_bp_pam50', data_root + '_denoised_hp_pam50', data_root + '_denoised_nofilter_pam50']
+        images_to_flip = [data_root + '_denoised_feat_pam50']
         for img in images_to_flip:
             if not os.path.isfile(img + '_flipped.nii.gz') or self.config['overwrite_flipping']:
                 img_toflip = nib.load(img + '.nii.gz')
@@ -616,11 +530,11 @@ class StaticFC:
         
         Outputs
         --------
-        data_root_[bp/hp/nofilter]_pam50(_flipped)_s.nii.gz
-            Denoised images (filtered or not), normalized to the PAM50 template, smoothed
+        data_root_feat_pam50(_flipped)_s.nii.gz
+            Denoised images (with FEAT), normalized to the PAM50 template, smoothed
 
         '''
-        images_to_smooth = [data_root + '_denoised_bp_pam50', data_root + '_denoised_hp_pam50', data_root + '_denoised_nofilter_pam50']
+        images_to_smooth = [data_root + '_denoised_feat_pam50']
         for img in images_to_smooth:
             if (os.path.isfile(img + '_flipped.nii.gz') and (not os.path.isfile(img + '*_s.nii.gz') or self.config['overwrite_smoothing'] or self.config['overwrite_flipping'])):
                 img_smooth = image.smooth_img(img + '_flipped.nii.gz', [2,2,6])
